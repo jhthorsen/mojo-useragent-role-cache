@@ -15,4 +15,7 @@ sub cache_driver_singleton {
   return $class;
 }
 
+around start => sub {
+};
+
 1;
