@@ -10,7 +10,7 @@ has root_dir => sub { $ENV{MOJO_USERAGENT_CACHE_DIR} || Mojo::File::tempdir('moj
 sub get {
   my $self = shift;
   my $file = $self->_file($self->root_dir, shift);
-  return -e $file ? Storable::thaw($file->slurp) : undef;
+  return -e $file ? Storable::thaw($file->slurp)->[0] : undef;
 }
 
 sub remove {
@@ -25,7 +25,7 @@ sub set {
   my $file = $self->_file($self->root_dir, shift);
   my $dir  = Mojo::File->new($file->dirname);
   $dir->make_path({mode => 0755}) unless -d $dir;
-  $file->spurt(Storable::freeze(shift));
+  $file->spurt(Storable::freeze([shift]));
   return $self;
 }
 
