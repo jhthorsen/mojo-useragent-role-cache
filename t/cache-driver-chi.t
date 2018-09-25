@@ -10,8 +10,8 @@ my $url
 my $driver = ua()->cache_driver;
 is $driver->get($url), undef, 'get';
 
-$driver->set($url, {x => 42});
-is_deeply $driver->get($url), {x => 42}, 'get after set';
+$driver->set($url, "GET /chi\r\n");
+is_deeply $driver->get($url), "GET /chi\r\n", 'get after set';
 is +ua()->cache_driver->get($url), undef, 'get fresh object';
 
 $driver->remove($url);

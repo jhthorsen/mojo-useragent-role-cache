@@ -11,8 +11,8 @@ is $driver, $ua->cache_driver_singleton, 'using cache_driver_singleton';
 
 is $driver->get($url), undef, 'get';
 
-is $driver->set($url, {x => 42}), $driver, 'set';
-is_deeply $driver->get($url), {x => 42}, 'get after set';
+is $driver->set($url, "GET /file\r\n"), $driver, 'set';
+is_deeply $driver->get($url), "GET /file\r\n", 'get after set';
 
 is $driver->remove($url), $driver, 'remove';
 is $driver->get($url), undef, 'get after remove';
