@@ -8,15 +8,17 @@ use constant DEBUG => $ENV{MOJO_CLIENT_DEBUG} || 0;
 
 our $VERSION = '0.01';
 
+my $DEFAULT_STRATEGY = 'playback_or_record';
+
 has cache_driver => sub { shift->cache_driver_singleton };
 has cache_strategy => sub {
-  my $strategy = $ENV{MOJO_USERAGENT_CACHE_STRATEGY} || 'playback_or_record';
+  my $strategy = $ENV{MOJO_USERAGENT_CACHE_STRATEGY} || $DEFAULT_STRATEGY;
   my @strategies = map { split /=/, $_, 2 } split '&', $strategy;
   my %strategies = @strategies == 1 ? () : @strategies;
 
   return !%strategies ? sub {$strategy} : sub {
     my $method = uc shift->req->method;
-    return $strategies{$method} || $strategies{DEFAULT} || 'playback_or_record';
+    return $strategies{$method} || $strategies{DEFAULT} || $DEFAULT_STRATEGY;
   };
 };
 
@@ -158,7 +160,7 @@ find a bug or find this role interesting.
 
 L<https://github.com/jhthorsen/mojo-useragent-role-cache/issues>
 
-TODO:
+Below is a list of known issues: (Contributions are more than welcome)
 
 =over 2
 
@@ -171,6 +173,11 @@ directory and filename structure.
 
 The cache key is just HTTP method and URL. Need to also include a digest of the
 body and headers (?)
+
+=item * strategy for storing
+
+Should add a custom strategy for calulating the cache key and also reject
+storing the result at all.
 
 =back
 
