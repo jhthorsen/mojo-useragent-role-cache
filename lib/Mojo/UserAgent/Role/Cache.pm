@@ -13,7 +13,9 @@ use constant DEBUG => $ENV{MOJO_CLIENT_DEBUG} || 0;
 our $VERSION = '0.01';
 
 has cache_driver => sub { shift->cache_driver_singleton };
-has cache_mode => sub { $ENV{MOJO_USERAGENT_CACHE_MODE} || 'playback_or_record' };
+has cache_strategy => sub {
+  return sub { $ENV{MOJO_USERAGENT_CACHE_MODE} || 'playback_or_record' };
+};
 
 sub cache_driver_singleton {
   my $class = shift;
@@ -26,7 +28,7 @@ sub cache_driver_singleton {
 around start => sub {
   my ($orig, $self, $tx) = (shift, shift, shift);
 
-  my $mode = $self->cache_mode;
+  my $mode = $self->cache_strategy->($tx);
   warn qq(-- Cache mode is "$mode" (@{[_url($tx)]})\n) if DEBUG and !$self->{cache_passthrough};
   return $self->$orig($tx, @_) if $mode eq 'passthrough' or delete $self->{cache_passthrough};
 
