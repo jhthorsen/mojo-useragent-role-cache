@@ -158,6 +158,22 @@ find a bug or find this role interesting.
 
 L<https://github.com/jhthorsen/mojo-useragent-role-cache/issues>
 
+TODO:
+
+=over 2
+
+=item * cache files
+
+L<Mojo::UserAgent::Role::Cache::Driver::File> is very basic now. Need better
+directory and filename structure.
+
+=item * cache key
+
+The cache key is just HTTP method and URL. Need to also include a digest of the
+body and headers (?)
+
+=back
+
 =head1 ATTRIBUTES
 
 =head2 cache_driver
