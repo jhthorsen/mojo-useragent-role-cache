@@ -14,7 +14,14 @@ our $VERSION = '0.01';
 
 has cache_driver => sub { shift->cache_driver_singleton };
 has cache_strategy => sub {
-  return sub { $ENV{MOJO_USERAGENT_CACHE_MODE} || 'playback_or_record' };
+  my $strategy = $ENV{MOJO_USERAGENT_CACHE_STRATEGY} || 'playback_or_record';
+  my @strategies = map { split /=/, $_, 2 } split '&', $strategy;
+  my %strategies = @strategies == 1 ? () : @strategies;
+
+  return !%strategies ? sub {$strategy} : sub {
+    my $method = uc shift->req->method;
+    return $strategies{$method} || $strategies{DEFAULT} || 'playback_or_record';
+  };
 };
 
 sub cache_driver_singleton {
@@ -28,12 +35,12 @@ sub cache_driver_singleton {
 around start => sub {
   my ($orig, $self, $tx) = (shift, shift, shift);
 
-  my $mode = $self->cache_strategy->($tx);
-  warn qq(-- Cache mode is "$mode" (@{[_url($tx)]})\n) if DEBUG and !$self->{cache_passthrough};
-  return $self->$orig($tx, @_) if $mode eq 'passthrough' or delete $self->{cache_passthrough};
+  my $strategy = $self->cache_strategy->($tx);
+  warn qq(-- Cache strategy is "$strategy" (@{[_url($tx)]})\n) if DEBUG and !$self->{cache_passthrough};
+  return $self->$orig($tx, @_) if $strategy eq 'passthrough' or delete $self->{cache_passthrough};
 
-  my $method = $self->can("_cache_start_$mode");
-  Carp::confess(qq(:Mojo::UserAgent::Role::Cache] Invalid mode "$mode".)) unless $method;
+  my $method = $self->can("_cache_start_$strategy");
+  Carp::confess(qq([Mojo::UserAgent::Role::Cache] Invalid strategy "$strategy".)) unless $method;
   return $self->$method($tx, @_);
 };
 
