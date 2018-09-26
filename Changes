@@ -1,4 +1,7 @@
 Revision history for perl distribution Mojo-UserAgent-Role-Cache
 
 0.01 Not Released
- - Started project
+ - Add basic caching through Mojo::UserAgent::Role::Cache::Driver::File
+ - Add attribute "cache_driver"
+ - Add attribute "cache_strategy"
+ - Add method "cache_driver_singleton"

@@ -37,3 +37,59 @@ sub _file {
 }
 
 1;
+
+=encoding utf8
+
+=head1 NAME
+
+Mojo::UserAgent::Role::Cache::Driver::File - Default cache driver for Mojo::UserAgent::Role::Cache
+
+=head1 SYNOPSIS
+
+  my $driver = Mojo::UserAgent::Role::Cache::Driver::File->new;
+
+  $driver->set($key, $data);
+  $data = $driver->get($key);
+  $driver->remove($key);
+
+=head1 DESCRIPTION
+
+L<Mojo::UserAgent::Role::Cache::Driver::File> is the default cache driver for
+L<Mojo::UserAgent::Role::Cache>. It should provide the same interface as
+L<CHI>.
+
+=head1 ATTRIBUTES
+
+=head2 root_dir
+
+  $str = $self->root_dir;
+  $self = $self->root_dir("/path/to/mojo-useragent-cache");
+
+Where to store the cached files. Defaults to the C<MOJO_USERAGENT_CACHE_DIR>
+environment variable or a L<tempdir|Mojo::File/tempdir>.
+
+=head1 METHODS
+
+=head2 get
+
+  $data = $self->get($key);
+
+Retrive data from the cache. Returns C<undef()> if the C<$key> is not L</set>.
+
+=head2 remove
+
+  $self = $self->remove($key);
+
+Removes data from the cache, by C<$key>.
+
+=head2 set
+
+  $self = $self->set($key => $data);
+
+Stores new C<$data> in the cache.
+
+=head1 SEE ALSO
+
+L<Mojo::UserAgent::Role::Cache>.
+
+=cut

@@ -1,10 +1,6 @@
 package Mojo::UserAgent::Role::Cache;
 use Mojo::Base -role;
 
-# See also
-# - https://metacpan.org/pod/Mojo::UserAgent::Cached
-# - https://metacpan.org/pod/Mojo::UserAgent::Mockable
-
 use Mojo::UserAgent::Role::Cache::Driver::File;
 use Mojo::Util 'term_escape';
 
@@ -126,3 +122,109 @@ sub _cache_start_record {
 }
 
 1;
+
+=encoding utf8
+
+=head1 NAME
+
+Mojo::UserAgent::Role::Cache - Role for Mojo::UserAgent that provides caching
+
+=head1 SYNOPSIS
+
+  # Apply the role
+  my $ua_class_with_cache = Mojo::UserAgent->with_roles('+Cache');
+  my $ua = $ua_class_with_cache->new;
+
+  # Change the global cache driver
+  use CHI;
+  $ua_class_with_cache->cache_driver_singleton(CHI->new(driver => "Memory", datastore => {}));
+
+  # Or change the driver for the instance
+  $ua->cache_driver(CHI->new(driver => "Memory", datastore => {}));
+
+  # The rest is like a normal Mojo::UserAgent
+  my $tx = $ua->get($url)->error;
+
+=head1 DESCRIPTION
+
+L<Mojo::UserAgent::Role::Cache> is a role for the full featured non-blocking
+I/O HTTP and WebSocket user agent L<Mojo::UserAgent>, that provides caching.
+
+=head1 WARNING
+
+L<Mojo::UserAgent::Role::Cache> is still under development, so there will be
+changes and there is probably bugs that needs fixing. Please report in if you
+find a bug or find this role interesting.
+
+L<https://github.com/jhthorsen/mojo-useragent-role-cache/issues>
+
+=head1 ATTRIBUTES
+
+=head2 cache_driver
+
+  $obj = $self->cache_driver;
+  $self = $self->cache_driver(CHI->new);
+
+Holds an object that will get/set the HTTP messages. Default is
+L<Mojo::UserAgent::Role::Cache::Driver::File>, but any backend that supports
+L<get()> and L<set()> should do.
+
+=head2 cache_strategy
+
+  $code = $self->cache_strategy;
+  $self = $self->cache_strategy(sub { my $tx = shift; return "passthrough" });
+
+Used to set up a callback to return a cache strategy. Default value is read
+from the C<MOJO_USERAGENT_CACHE_STRATEGY> environment variable or
+"playback_or_record".
+
+The return value from the C<$code> can be one of:
+
+=over 2
+
+=item * passthrough
+
+Will disable any caching.
+
+=item * playback
+
+Will never send a request to the remote server, but only look for recorded
+messages.
+
+=item * playback_or_record
+
+Will return a recorded message if it exists, or fetch one from the remote
+server and store the response.
+
+=item * record
+
+Will always fetch a new response from the remote server and store the response.
+
+=back
+
+=head1 METHODS
+
+=head2 cache_driver_singleton
+
+  $obj = Mojo::UserAgent::Role::Cache->cache_driver_singleton;
+  Mojo::UserAgent::Role::Cache->cache_driver_singleton($obj);
+
+Used to retrieve or set the default L</cache_driver>. Useful for setting up
+caching globally in unit tests.
+
+=head1 AUTHOR
+
+Jan Henning Thorsen
+
+=head1 COPYRIGHT AND LICENSE
+
+This program is free software, you can redistribute it and/or modify it under
+the terms of the Artistic License version 2.0.
+
+=head1 SEE ALSO
+
+L<Mojo::UserAgent>,
+L<https://metacpan.org/pod/Mojo::UserAgent::Cached> and
+L<https://metacpan.org/pod/Mojo::UserAgent::Mockable>.
+
+=cut
