@@ -1,6 +1,10 @@
 package Mojo::UserAgent::Role::Cache;
 use Mojo::Base -role;
 
+# See also
+# - https://metacpan.org/pod/Mojo::UserAgent::Cached
+# - https://metacpan.org/pod/Mojo::UserAgent::Mockable
+
 use Mojo::UserAgent::Role::Cache::Driver::File;
 use Mojo::Util 'term_escape';
 
