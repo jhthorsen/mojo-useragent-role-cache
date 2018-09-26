@@ -133,6 +133,8 @@ Mojo::UserAgent::Role::Cache - Role for Mojo::UserAgent that provides caching
 
 =head1 SYNOPSIS
 
+=head2 General
+
   # Apply the role
   my $ua_class_with_cache = Mojo::UserAgent->with_roles('+Cache');
   my $ua = $ua_class_with_cache->new;
@@ -147,10 +149,49 @@ Mojo::UserAgent::Role::Cache - Role for Mojo::UserAgent that provides caching
   # The rest is like a normal Mojo::UserAgent
   my $tx = $ua->get($url)->error;
 
+=head2 Module
+
+  package MyCoolModule;
+  use Mojo::Base -base;
+
+  has ua => sub {
+    return $ENV{MOJO_USERAGENT_CACHE_STRATEGY}
+      ? Mojo::UserAgent->with_roles('+Cache') : Mojo::UserAgent->new;
+  };
+
+  sub get_mojolicious_org {
+    return shift->ua->get("https://mojolicious.org/");
+  }
+
+Using the C<MOJO_USERAGENT_CACHE_STRATEGY> inside the module is a very
+effective way to either use the global cache set up by a unit test, or run with
+the default L<Mojo::UserAgent> without caching.
+
+=head2 Test
+
+  use Mojo::Base -strict;
+  use Mojo::UserAgent::Role::Cache;
+  use MyCoolModule;
+  use Test::More;
+
+  # Set up the environment and change the global cache_driver before running
+  # the tests
+  $ENV{MOJO_USERAGENT_CACHE_STRATEGY} ||= "playback";
+  Mojo::UserAgent::Role::Cache->cache_driver_singleton->root_dir("/some/path");
+
+  # Run the tests
+  my $cool = MyCoolModule->new;
+  is $cool->get_mojolicious_org->res->code, 200, "mojolicious.org works";
+
+  done_testing;
+
 =head1 DESCRIPTION
 
 L<Mojo::UserAgent::Role::Cache> is a role for the full featured non-blocking
 I/O HTTP and WebSocket user agent L<Mojo::UserAgent>, that provides caching.
+
+The L</SYNOPSIS> shows how to use this in with tests, but there's nothing wrong
+with using it for other things as well, where you want caching.
 
 =head1 WARNING
 
