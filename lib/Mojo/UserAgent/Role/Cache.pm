@@ -11,6 +11,21 @@ our $VERSION = '0.01';
 my $DEFAULT_STRATEGY = 'playback_or_record';
 
 has cache_driver => sub { shift->cache_driver_singleton };
+
+has cache_key => sub {
+  return sub {
+    my $req  = shift->req;
+    my $url  = $req->url;
+    my @keys = (lc $req->method);
+
+    push @keys, $url->host // '';
+    push @keys, $url->path_query;
+    push @keys, Mojo::Util::md5_sum($req->body) unless $keys[0] eq 'get';
+
+    return \@keys;
+  };
+};
+
 has cache_strategy => sub {
   my $strategy = $ENV{MOJO_USERAGENT_CACHE_STRATEGY} || $DEFAULT_STRATEGY;
   my @strategies = map { split /=/, $_, 2 } split '&', $strategy;
@@ -46,7 +61,7 @@ sub _url { shift->req->url->to_abs }
 
 sub _cache_get_tx {
   my ($self, $tx_input) = @_;
-  my $key = join '/', $tx_input->req->method, $tx_input->req->url;    # TODO - Better key
+  my $key = $self->cache_key->($tx_input);
 
   my $buffer = $self->cache_driver->get($key);
   return undef unless defined $buffer;
@@ -57,8 +72,7 @@ sub _cache_get_tx {
 
 sub _cache_set_tx {
   my ($self, $tx_input, $tx_output) = @_;
-  my $key = join '/', $tx_input->req->method, $tx_input->req->url;    # TODO - Better key
-  $self->cache_driver->set($key, $tx_output->res->to_string);
+  $self->cache_driver->set($self->cache_key->($tx_input), $tx_output->res->to_string);
   return $self;
 }
 
@@ -201,27 +215,6 @@ find a bug or find this role interesting.
 
 L<https://github.com/jhthorsen/mojo-useragent-role-cache/issues>
 
-Below is a list of known issues: (Contributions are more than welcome)
-
-=over 2
-
-=item * cache files
-
-L<Mojo::UserAgent::Role::Cache::Driver::File> is very basic now. Need better
-directory and filename structure.
-
-=item * cache key
-
-The cache key is just HTTP method and URL. Need to also include a digest of the
-body and headers (?)
-
-=item * strategy for storing
-
-Should add a custom strategy for calulating the cache key and also reject
-storing the result at all.
-
-=back
-
 =head1 ATTRIBUTES
 
 =head2 cache_driver
@@ -231,7 +224,27 @@ storing the result at all.
 
 Holds an object that will get/set the HTTP messages. Default is
 L<Mojo::UserAgent::Role::Cache::Driver::File>, but any backend that supports
-L<get()> and L<set()> should do.
+C<get()> and C<set()> should do.
+
+=head2 cache_key
+
+  $code = $self->cache_key;
+  $self = $self->cache_key(sub { my $tx = shift; return $tx->req->url });
+
+Holds a code ref that returns an array-ref of the key parts that is passed on
+to C<get()> or C<set()> in the L</cache_driver>.
+
+This works with L<CHI> as well, since CHI will serialize the key if it is a
+reference.
+
+The default is EXPERIMENTAL, but returns this value for now:
+
+  [
+    $http_method, # get, post, ...
+    $host,        # no port
+    $path_query,  # /foo?x=42
+    md5($body),   # but not for GET
+  ]
 
 =head2 cache_strategy
 
