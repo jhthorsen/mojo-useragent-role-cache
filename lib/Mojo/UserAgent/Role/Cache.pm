@@ -20,7 +20,7 @@ has cache_key => sub {
 
     push @keys, $url->host // '';
     push @keys, $url->path_query;
-    push @keys, Mojo::Util::md5_sum($req->body) unless $keys[0] eq 'get';
+    push @keys, Mojo::Util::md5_sum($req->body) if length $req->body // '';
 
     return \@keys;
   };
