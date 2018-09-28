@@ -6,7 +6,7 @@ use Mojo::Util 'term_escape';
 
 use constant DEBUG => $ENV{MOJO_CLIENT_DEBUG} || 0;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 my $DEFAULT_STRATEGY = 'playback_or_record';
 
