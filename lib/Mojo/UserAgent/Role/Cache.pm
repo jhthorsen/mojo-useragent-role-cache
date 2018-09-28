@@ -207,6 +207,15 @@ I/O HTTP and WebSocket user agent L<Mojo::UserAgent>, that provides caching.
 The L</SYNOPSIS> shows how to use this in with tests, but there's nothing wrong
 with using it for other things as well, where you want caching.
 
+By default, this module caches everything without any expiration. This is
+because L<Mojo::UserAgent::Role::Cache::Driver::File> is very basic and
+actually just meant for unit testing. If you want something more complex, you
+can use L<CHI> or another L</cache_driver> that implements the logic you want.
+
+One exotic hack that is possible, is to make L</cache_key> return the whole
+L<$tx> object and then implement a wrapper around L<CHI> that will investigate
+the transaction and see if it wants to cache the request at all.
+
 =head1 WARNING
 
 L<Mojo::UserAgent::Role::Cache> is still under development, so there will be
@@ -224,7 +233,8 @@ L<https://github.com/jhthorsen/mojo-useragent-role-cache/issues>
 
 Holds an object that will get/set the HTTP messages. Default is
 L<Mojo::UserAgent::Role::Cache::Driver::File>, but any backend that supports
-C<get()> and C<set()> should do.
+C<get()> and C<set()> should do. This means that you can use L<CHI> if you
+like.
 
 =head2 cache_key
 
