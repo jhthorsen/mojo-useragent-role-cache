@@ -1,5 +1,8 @@
 Revision history for perl distribution Mojo-UserAgent-Role-Cache
 
+0.03 Not Released
+ - Can debug cache info with MOJO_UA_CACHE_DEBUG=1, without dumping req/res
+
 0.02 2018-09-28T21:29:01+0900
  - Fix unique filename per cache entry
  - Add attribute "cache_key"

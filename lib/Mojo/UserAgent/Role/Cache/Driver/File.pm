@@ -4,11 +4,14 @@ use Mojo::Base -base;
 use Mojo::File;
 use Mojo::Util 'md5_sum';
 
+use constant DEBUG => $ENV{MOJO_CLIENT_DEBUG} || $ENV{MOJO_UA_CACHE_DEBUG} || 0;
+
 has root_dir => sub { $ENV{MOJO_USERAGENT_CACHE_DIR} || Mojo::File::tempdir('mojo-useragent-cache-XXXXX') };
 
 sub get {
   my $self = shift;
   my $file = $self->_path(shift);
+  warn qq(-- Reading Mojo::UserAgent cache file $file\n) if DEBUG and -e $file;
   return -e $file ? $file->slurp : undef;
 }
 
@@ -23,6 +26,7 @@ sub set {
   my $self = shift;
   my $file = $self->_path(shift);
   my $dir  = Mojo::File->new($file->dirname);
+  warn qq(-- Writing Mojo::UserAgent cache file $file\n) if DEBUG;
   $dir->make_path({mode => 0755}) unless -d $dir;
   $file->spurt(shift);
   return $self;
@@ -31,7 +35,7 @@ sub set {
 sub _path {
   my ($self, $key) = @_;
   my $method = shift @$key;
-  my $last = substr md5_sum(pop @$key), 0, 12;
+  my $last   = substr md5_sum(pop @$key), 0, 12;
 
   return Mojo::File->new($self->root_dir, $method, (map { substr md5_sum($_), 0, 12 } @$key), "$last.http");
 }

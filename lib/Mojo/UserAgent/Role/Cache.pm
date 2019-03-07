@@ -4,7 +4,8 @@ use Mojo::Base -role;
 use Mojo::UserAgent::Role::Cache::Driver::File;
 use Mojo::Util 'term_escape';
 
-use constant DEBUG => $ENV{MOJO_CLIENT_DEBUG} || 0;
+use constant DEBUG => $ENV{MOJO_CLIENT_DEBUG} || $ENV{MOJO_UA_CACHE_DEBUG} || 0;
+use constant TRACE => $ENV{MOJO_CLIENT_DEBUG} || 0;
 
 our $VERSION = '0.02';
 
@@ -27,7 +28,7 @@ has cache_key => sub {
 };
 
 has cache_strategy => sub {
-  my $strategy = $ENV{MOJO_USERAGENT_CACHE_STRATEGY} || $DEFAULT_STRATEGY;
+  my $strategy   = $ENV{MOJO_USERAGENT_CACHE_STRATEGY} || $DEFAULT_STRATEGY;
   my @strategies = map { split /=/, $_, 2 } split '&', $strategy;
   my %strategies = @strategies == 1 ? () : @strategies;
 
@@ -79,7 +80,7 @@ sub _cache_set_tx {
 sub _cache_start_playback {
   my ($self, $tx_input, $cb) = @_;
   my $tx_output = $self->_cache_get_tx($tx_input);
-  my $status = $tx_output ? '<<<' : '!!!';
+  my $status    = $tx_output ? '<<<' : '!!!';
 
   # Not in cache
   unless ($tx_output) {
@@ -87,8 +88,8 @@ sub _cache_start_playback {
     $tx_output->res->error({message => 'Not in cache.'});
   }
 
-  warn term_escape "-- Client >>> Cache (@{[_url($tx_input)]})\n@{[$tx_input->req->to_string]}\n"      if DEBUG;
-  warn term_escape "-- Client $status Cache (@{[_url($tx_input)]})\n@{[$tx_output->res->to_string]}\n" if DEBUG;
+  warn term_escape "-- Client >>> Cache (@{[_url($tx_input)]})\n@{[$tx_input->req->to_string]}\n"      if TRACE;
+  warn term_escape "-- Client $status Cache (@{[_url($tx_input)]})\n@{[$tx_output->res->to_string]}\n" if TRACE;
 
   # Blocking
   return $tx_output unless $cb;
@@ -108,8 +109,8 @@ sub _cache_start_playback_or_record {
     return $self->_cache_start_record($tx_input, $cb ? ($cb) : ());
   }
 
-  warn term_escape "-- Client >>> Cache (@{[_url($tx_input)]})\n@{[$tx_input->req->to_string]}\n"  if DEBUG;
-  warn term_escape "-- Client <<< Cache (@{[_url($tx_input)]})\n@{[$tx_output->res->to_string]}\n" if DEBUG;
+  warn term_escape "-- Client >>> Cache (@{[_url($tx_input)]})\n@{[$tx_input->req->to_string]}\n"  if TRACE;
+  warn term_escape "-- Client <<< Cache (@{[_url($tx_input)]})\n@{[$tx_output->res->to_string]}\n" if TRACE;
 
   # Blocking
   return $tx_output unless $cb;
