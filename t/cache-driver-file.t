@@ -9,18 +9,26 @@ my $ua     = Mojo::UserAgent->with_roles('+Cache')->new;
 my $driver = $ua->cache_driver;
 is $driver, $ua->cache_driver_singleton, 'using cache_driver_singleton';
 
-is $driver->get([post => $url]), undef, 'get';
+is $driver->get(_key(post => $url)), undef, 'get';
 
-is $driver->set([post => $url], "GET /file\r\n"), $driver, 'set';
-is_deeply $driver->get([post => $url]), "GET /file\r\n", 'get after set';
-like +Mojo::File->new($driver->root_dir)->list_tree->first, qr{mojo-useragent-cache-.*post[^\w]+cba7c48ddec7\.http},
-  'filename on disk';
+is $driver->set(_key(post => $url), "GET /file\r\n"), $driver, 'set';
+is $driver->get(_key(post => $url)), "GET /file\r\n", 'get after set';
+like +Mojo::File->new($driver->root_dir)->list_tree->first,
+  qr{mojo-useragent-cache-.+?post.+?0a137b375cc3.+?1c85cc3dbf7f\.http}, 'filename on disk';
 
-is $driver->remove([post => $url]), $driver, 'remove';
-is $driver->get([post => $url]), undef, 'get after remove';
+is $driver->remove(_key(post => $url)), $driver, 'remove';
+is $driver->get(_key(post => $url)), undef, 'get after remove';
 
-is $driver->set([get => $url], "GET /file\r\n"), $driver, 'set';
-like +Mojo::File->new($driver->root_dir)->list_tree->first, qr{mojo-useragent-cache-.*get[^\w]+cba7c48ddec7\.http},
-  'filename on disk';
+is $driver->set(_key(get => $url), "GET /file\r\n"), $driver, 'set';
+like +Mojo::File->new($driver->root_dir)->list_tree->first,
+  qr{mojo-useragent-cache-.+?get.+?0a137b375cc3.+?1c85cc3dbf7f\.http}, 'filename on disk';
 
 done_testing;
+
+sub _key {
+  my $tx = Mojo::Transaction::HTTP->new;
+  $tx->req->method(shift);
+  $tx->req->url(Mojo::URL->new(shift));
+  $tx->req->body(shift) if @_;
+  return $ua->cache_key->($tx);
+}
