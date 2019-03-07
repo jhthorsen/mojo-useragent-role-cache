@@ -14,14 +14,16 @@ is $driver->get(_key(post => $url)), undef, 'get';
 is $driver->set(_key(post => $url), "GET /file\r\n"), $driver, 'set';
 is $driver->get(_key(post => $url)), "GET /file\r\n", 'get after set';
 like +Mojo::File->new($driver->root_dir)->list_tree->first,
-  qr{mojo-useragent-cache-.+?post.+?0a137b375cc3.+?1c85cc3dbf7f\.http}, 'filename on disk';
+  qr{mojo-useragent-cache-.+?post.+?www\.google\.com.+?search.+?387ac59b94dc580badafa0ecf1a55510\.http},
+  'post filename on disk';
 
 is $driver->remove(_key(post => $url)), $driver, 'remove';
 is $driver->get(_key(post => $url)), undef, 'get after remove';
 
 is $driver->set(_key(get => $url), "GET /file\r\n"), $driver, 'set';
 like +Mojo::File->new($driver->root_dir)->list_tree->first,
-  qr{mojo-useragent-cache-.+?get.+?0a137b375cc3.+?1c85cc3dbf7f\.http}, 'filename on disk';
+  qr{mojo-useragent-cache-.+?get.+?www\.google\.com.+?search.+?387ac59b94dc580badafa0ecf1a55510\.http},
+  'get filename on disk';
 
 done_testing;
 

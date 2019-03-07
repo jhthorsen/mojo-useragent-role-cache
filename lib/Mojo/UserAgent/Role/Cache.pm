@@ -15,15 +15,16 @@ has cache_driver => sub { shift->cache_driver_singleton };
 
 has cache_key => sub {
   return sub {
-    my $req  = shift->req;
-    my $url  = $req->url;
-    my @keys = (lc $req->method);
+    my $req = shift->req;
+    my $url = $req->url;
+    my @key = (lc $req->method, $url->host || 'local', map { _escape($_) } @{$url->path});
 
-    push @keys, $url->host // '';
-    push @keys, $url->path_query;
-    push @keys, Mojo::Util::md5_sum($req->body) if length $req->body // '';
+    # The question marks is a hack to make sure the path parts will
+    # never be in conflict with the query and body.
+    push @key, '?q=' . $url->query->to_string;
+    push @key, '?b=' . Mojo::Util::md5_sum($req->body) if length $req->body // '';
 
-    return \@keys;
+    return \@key;
   };
 };
 
@@ -57,6 +58,13 @@ around start => sub {
   Carp::confess(qq([Mojo::UserAgent::Role::Cache] Invalid strategy "$strategy".)) unless $method;
   return $self->$method($tx, @_);
 };
+
+sub _escape {
+  local $_ = Mojo::Util::url_escape($_[0]);
+  s!_!%5F!g;
+  s!%!_!g;
+  $_;
+}
 
 sub _url { shift->req->url->to_abs }
 
@@ -219,11 +227,21 @@ the transaction and see if it wants to cache the request at all.
 
 =head1 WARNING
 
+=head2 Experimenntal
+
 L<Mojo::UserAgent::Role::Cache> is still under development, so there will be
 changes and there is probably bugs that needs fixing. Please report in if you
 find a bug or find this role interesting.
 
 L<https://github.com/jhthorsen/mojo-useragent-role-cache/issues>
+
+=head2 Upgrading from 0.02 to 0.03
+
+Upgrading from version 0.02 to 0.03 will cause all your cached files to be
+invalid, since the L</cache_key> is changed. If you are using
+L<Mojo::UserAgent::Role::Cache::Driver::File>, you can set the environment
+variable C<MOJO_UA_CACHE_RENAME=1> to on-the-fly rename the old files to the
+new format.
 
 =head1 ATTRIBUTES
 
